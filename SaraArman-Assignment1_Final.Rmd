@@ -1,0 +1,54 @@
+---
+# title: "Assignment 1"
+### author: "Sara Arman"
+### date: "9/6/2020"
+output: "html_document"
+---
+
+```{r}
+library(tidycensus)
+library(tidyverse)
+```
+
+# Sara Arman, Assignment 1
+
+## Variables Used: 
+
+With my assignment, I was interested in analyzing the relationship between gender, educational achievement, and citizenship or immigration status. My unit of analysis is person, as that would be helpful to analyze individual education levels instead of household data. I used the 2018 American Community Survey 1-year estimate, as I specifically wanted to look at Massachusetts, and the 1-year estimates are data for geographic areas with populations of 65,000 or more.(https://www.census.gov/content/dam/Census/library/publications/2020/acs/acs_api_handbook_2020.pdf)(Found link by looking at Catherine Saint's Assignment) My sample population is people living in Massachusetts.
+
+I chose the following variables"
+1. Sex, "SEX" (categorical)
+2. Wages or salary income past 12 months, "WAGP" (continuous)
+3. Public assistance income past 12 months, "PAP" (continuous)
+4. Educational attainment, "SCHL" (categorical) 
+5. Citizenship status, CIT (categorical) 
+6. Age, AGEP (continuous)
+
+
+
+```{r load person_data, results='hide'}
+person_data <- get_pums(variables= c("SEX",
+"WAGP",
+"PAP",
+"SCHL",
+"AGEP",
+"CIT"),
+state = "MA",
+year="2018",
+survey="acs1",
+recode=TRUE)
+```
+
+## Data Set and Observations 
+I created my data set,I have 70,131 observations. I include the first few rows of the data set below. I will filter this data, to specifically only look at people who identified as Female (SEX ==2), and who are older than 22 (AGEP > 22). Once I filter this, I have 27,703 entries. 
+
+```{r}
+  head (person_data, 10)
+```
+### I will save this data set as a CSV file. 
+
+```{r}
+write.csv(person_data, "DataSet1.csv")
+```
+
+
