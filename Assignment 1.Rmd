@@ -1,0 +1,55 @@
+---
+title: "Assignment 1"
+author: "Sara Arman"
+date: "9/6/2020"
+output: html_document
+---
+remotes::install_github("walkerke/tidycensus")
+library(tidycensus)
+library(tidyverse)
+
+With my assignment, I was interested in analyzing the relationship between gender, educational achievement, and citizenship or immigration status. My unit of analysis is person, as that would be helpful to analyze individual education levels instead of household data. I used the 2018 American Community Survey 1-year estimate, as I specifically wanted to look at Massachusetts, and the 1-year estimates are data for geographic areas with populations of 65,000 or more.(https://www.census.gov/content/dam/Census/library/publications/2020/acs/acs_api_handbook_2020.pdf)(Found link by looking at Catherine Saint's Assignment) My sample population is people living in Massachusetts.
+
+I chose the following variables"
+1. Sex, "SEX", categorical 
+2. Wages or salary income past 12 months, "WAGP", continuous
+3. Public assistance income past 12 months, "PAP", continuous
+4. Educational attainment, "SCHL", categorical 
+5. Citizenship status, CIT, categorical 
+6. Age, AGEP, continuous
+
+census_api_key("f2deb6f41ed498031ad618826998cf32b09d1465", install = TRUE)
+person_vars_2018 <- pums_variables %>%
+  distinct(year, survey, var_code, 
+           var_label, data_type, level) %>%
+  filter(level == "person", year == 2018, survey == "acs1")
+  
+  {r load person-level data, results = hide}
+  
+person_data <- get_pums 
+state="MA"
+
+```{r}
+person_data <- get_pums(variables= c("SEX",
+"WAGP",
+"PAP",
+"SCHL",
+"AGEP",
+"CIT"),
+state = "MA",
+year="2018",
+survey="acs1",
+recode=TRUE)
+
+filter("SEX" == 2, AGEP > 22)
+
+```
+
+
+I created my dataset,I have 70,131 observations. I include the first few rows of the dataset below. 
+
+  ```{r}
+  head (person_data, 10)
+  ```
+  
+
