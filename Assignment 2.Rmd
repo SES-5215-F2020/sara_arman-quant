@@ -1,0 +1,204 @@
+---
+title: "Assignment 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidycensus)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+```
+
+
+```{r}
+person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
+  filter(WAGP> -1 & PAP> -1 & SEX== 2)
+```
+## Continous Variables 
+### My first continous variable is Wages over the past 12 months (WAGP) so I wil find the 
+
+1. mean
+2. standard deviation 
+3. 95% CI for Population Mean 
+4. Inter Quartile Range 
+5. and I will create a histogram.
+```{r quick summary statistics}
+WAGP_summary <- summary(person_data$WAGP)
+WAGP_summary
+```
+ 
+ ### Mean
+ 
+```{r}
+WAGP_summary["Mean"]
+```
+
+### Standard Deviation
+
+```{r}
+sd(person_data$WAGP)
+```
+
+
+### 95% CI for Population mean (if t-test is the difference of means between 2 groups, how does this work?)
+```{r}
+conf_int <- t.test(person_data$WAGP)
+conf_int
+```
+
+### IQR (IQR = Q3-Q1?)
+
+```{r}
+quantile(person_data$WAGP)
+```
+
+
+### Histogram 
+```{r}
+options(scipen = 999)
+ggplot(person_data, aes(x = WAGP)) +
+  geom_histogram()
+```
+
+### My second continous variable is Public Assistance Income Recieved over past 12 months, PAP
+
+```{r quick summary statistics}
+PAP_summary <- summary(person_data$PAP)
+PAP_summary
+```
+
+### Mean
+ 
+```{r}
+PAP_summary["Mean"]
+```
+
+### Standard Deviation
+
+```{r}
+sd(person_data$PAP)
+```
+### 95% CI 
+
+```{r}
+conf_int <- t.test(person_data$PAP)
+conf_int
+```
+
+### IQR (IQR = Q3-Q1?)
+
+```{r}
+quantile(person_data$PAP)
+```
+
+### Histogram 
+```{r}
+ggplot(person_data,
+       aes(x = PAP)) + 
+geom_histogram(aes(fill = ..count..), bins = 20000, color = "black", weight = 5) +
+scale_x_continuous(name = "Public Assistance Income",
+                   breaks = seq(1000, 5000, by = 1000)) +
+scale_y_continuous(name = "Count",
+                  breaks = seq(0, 50, by = 10)) + 
+labs(title = 'Public Assistance Income Received Over the Past 12 Months')+
+ theme_bw()
+coord_flip()
+```
+
+
+### My third continous variable is age
+
+```{r quick summary statistics}
+AGEP_summary <- summary(person_data$AGEP)
+AGEP_summary
+```
+
+### Mean
+ 
+```{r}
+AGEP_summary["Mean"]
+```
+### Standard Deviation
+
+```{r}
+sd(person_data$AGEP)
+```
+### 95% CI 
+
+```{r}
+conf_int <- t.test(person_data$AGEP)
+conf_int
+```
+### Histogram 
+```{r}
+ggplot(person_data, aes(x = AGEP)) +
+  geom_histogram()
+```
+## Categorical Variables
+
+### My first categorical variable is Sex
+
+```{r}
+unique(person_data$SEX_label)
+```
+```{r}
+table(person_data$SEX_label)
+```
+```{r}
+table(person_data$SEX_label) / sum(table(person_data$SEX_label))
+```
+```{r}
+mean(person_data$SEX_label == "Female")
+```
+
+```{r}
+t.test(person_data$SEX_label == "Female")
+```
+```{r}
+mean(person_data$SEX_label == "Male")
+```
+
+```{r}
+t.test(person_data$SEX_label == "Female")
+```
+
+### My second categorical variable is Educational Attainment SCHL 
+
+```{r}
+unique(person_data$SCHL_label)
+```
+
+```{r}
+table(person_data$SCHL_label)
+```
+
+```{r}
+table(person_data$SCHL_label) / sum(table(person_data$SCHL_label))
+```
+
+### Do I need to do this for every category? *Ask Carole
+```{r}
+mean(person_data$SCHL_label == "Regular high school diploma")
+```
+
+
+### My third categorical variable is Citizenship status , CIT
+```{r}
+unique(person_data$CIT_label)
+```
+```{r}
+table(person_data$CIT_label)
+```
+
+```{r}
+table(person_data$CIT_label) / sum(table(person_data$CIT_label))
+```
+
+```{r}
+t.test(person_data$CIT_label == "Not a citizen of the U.S.")
+```
