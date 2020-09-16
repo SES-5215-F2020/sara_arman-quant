@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load libraries, message=FALSE}}
+```{r load libraries, message=FALSE}
 library(tidycensus)
 library(tidyverse)
 library(ggplot2)
@@ -26,10 +26,10 @@ This data set includes the following variables:
 5. Citizenship status, CIT, categorical 
 6. Age, AGEP, continuous
 
-I have filtered my data to only include sex=2 (female) and wages and public assistance income greater than -1. This has narrowed my number of observations down from 70,131 to 31,262. 
-```{rload and attach data, message=FALSE}
+I have filtered my data to only include wages and public assistance income greater than -1. This has narrowed my number of observations down from 70,131 to 59,952. 
+```{r load and attach data, message=FALSE}
 person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
-  filter(WAGP> -1 & PAP> -1 & SEX== 2)
+  filter(WAGP> -1 & PAP> -1)
 ```
 ## Continous Variables 
 
@@ -42,10 +42,9 @@ person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
 
 ```{r quick summary statistics}
 WAGP_summary <- summary(person_data$WAGP)
-WAGP_summary
 ```
  
- ### Mean
+### Mean
  
 ```{r}
 WAGP_summary["Mean"]
@@ -60,7 +59,7 @@ sd(person_data$WAGP)
 
 ### 95% CI for Population mean 
 ```{r}
-conf_int <- t.test(person_data$WAGP)
+conf_int<- t.test(person_data$WAGP)
 conf_int
 ```
 
@@ -73,13 +72,13 @@ quantile(person_data$WAGP)
 
 ### Histogram 
 
-This histogram was not surprising, 
+This histogram was not surprising, as it shows that most people make less than 100,000 each year, with 25,000 people making 0 a year. 
 ```{r}
 options(scipen = 999)
 ggplot(person_data, aes(x = WAGP)) +
-  geom_histogram(color = "black" , bins = 20 )
+  geom_histogram(color = "black" , bins = 75)
 scale_x_continuous(name = "Wages and Income Over the Past 12 Months")
-                     breaks = breaks <- seq(0, 1000, by = 1000)
+                     breaks = breaks <- seq(0, 10, by = 1)
 ```
 
 ### My second continous variable is Public Assistance Income Recieved over past 12 months, PAP
@@ -107,21 +106,23 @@ conf_int <- t.test(person_data$PAP)
 conf_int
 ```
 
-### IQR (IQR = Q3-Q1?)
+### IQR (IQR = Q3-Q1)
 
 ```{r}
 quantile(person_data$PAP)
 ```
 
 ### Histogram 
+
+This histogram shows that most people recevied $0 in pubic assistance income, while a very small subset of the population recieved between $2000 and $4000.
 ```{r}
 ggplot(person_data,
        aes(x = PAP)) + 
-geom_histogram(aes(fill = ..count..), bins = 8, color = "black", weight = 3) +
+geom_histogram(aes(fill = ..count..), bins = 6, color = "black", weight = 3) +
 scale_x_continuous(name = "Public Assistance Income",
-                   breaks = seq(0, 10000, by = 5000)) +
+                   breaks = seq(0, 8000, by = 2000)) +
 scale_y_continuous(name = "Count",
-                  breaks = seq(0, 30000, by = 5000)) + 
+                  breaks = seq(0, 60000, by = 5000)) + 
 labs(title = 'Public Assistance Income Received Over the Past 12 Months')+
  theme_bw()
 coord_flip()
@@ -152,18 +153,17 @@ conf_int <- t.test(person_data$AGEP)
 conf_int
 ```
 ### Histogram 
+
+This histogram shows that there are many people who live in Massachusetts who are between the ages of 20-25, and 55-65. 
+
 ```{r}
-ggplot(person_data, aes(x = AGEP)) +
-  geom_histogram()
-
-
 ggplot(person_data,
        aes(x = AGEP)) + 
-geom_histogram(aes(fill = ..count..), bins = 10, color = "black", weight = 5) +
+geom_histogram(aes(fill = ..count..), bins = 20, color = "black", weight = 5) +
 scale_x_continuous(name = "Age",
-                   breaks = seq(0, 95, by = 10)) +
+                   breaks = seq(0, 95, by = 5)) +
 scale_y_continuous(name = "Count",
-                  breaks = seq(0, 30000, by = 5000)) + 
+                  breaks = seq(0, 30000, by = 2500)) + 
 labs(title = 'Age')+
  theme_bw()
 coord_flip()
@@ -182,6 +182,10 @@ unique(person_data$SEX_label)
 ```{r}
 table(person_data$SEX_label)
 ```
+```{r quick summary statistics}
+SEX_summary <- summary(person_data$SEX)
+SEX_summary
+```
 
 ```{r}
 table(person_data$SEX_label) / sum(table(person_data$SEX_label))
@@ -189,46 +193,92 @@ table(person_data$SEX_label) / sum(table(person_data$SEX_label))
 
 ```{r}
 mean(person_data$SEX_label == "Female")
+mean(person_data$SEX_label == "Male")
 ```
 
 ```{r}
 conf_int <- t.test(person_data$SEX_label == "Female")
+conf_int
 conf_int <- t.test(person_data$SEX_label == "Male")
+conf_int
 ```
 
 ### My second categorical variable is Educational Attainment (SCHL) 
 I am finding the confidence interval for each category within educational attainment.
 
 ```{r}
-conf_int <- t.test (person_data$SCHL == "1 or more years of college credit, no degree")
-conf_int <- t.test (person_data$SCHL == "12th grade - no diploma")
-conf_int <- t.test (person_data$SCHL == "Associate's degree")
-conf_int <- t.test (person_data$SCHL == "Bachelor's degree")
-conf_int <- t.test (person_data$SCHL == "Doctorate degree")
-conf_int <- t.test (person_data$SCHL == "GED or alternative credential")
-conf_int <- t.test (person_data$SCHL == "Grade 1")
-conf_int <- t.test (person_data$SCHL == "Grade 10")
-conf_int <- t.test (person_data$SCHL == "Grade 11")
-conf_int <- t.test (person_data$SCHL == "Grade 2")
-conf_int <- t.test (person_data$SCHL == "Grade 3")
-conf_int <- t.test (person_data$SCHL == "Grade 4")
-conf_int <- t.test (person_data$SCHL == "Grade 5")
-conf_int <- t.test (person_data$SCHL == "Grade 6")
-conf_int <- t.test (person_data$SCHL == "Grade 7")
-conf_int <- t.test (person_data$SCHL == "Grade 8")
-conf_int <- t.test (person_data$SCHL == "Grade 9")
-conf_int <- t.test (person_data$SCHL == "Kindergarten")
-conf_int <- t.test (person_data$SCHL == "Master's degree")
-conf_int <- t.test (person_data$SCHL == "No schooling completed")
-conf_int <- t.test (person_data$SCHL == "Nursery school, preschool")
-conf_int <- t.test (person_data$SCHL == "Professional degree beyond a bachelor's degree")
-conf_int <- t.test (person_data$SCHL == " Regular high school diploma")
-conf_int <- t.test (person_data$SCHL == "Some college, but less than 1 year")
+unique(person_data$SCHL_label)
 ```
+
+```{r quick summary statistics}
+SCHL_summary <- summary(person_data$SCHL)
+SCHL_summary
+```
+
+```{r}
+table(person_data$SCHL_label)
+```
+
+```{r}
+conf_int <- t.test (person_data$SCHL == "1 or more years of college credit, no degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == "12th grade - no diploma")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Associate's degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Bachelor's degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Doctorate degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == "GED or alternative credential")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 1")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 10")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 11")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 2")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 3")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 4")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 5")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 6")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 7")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 8")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Grade 9")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Kindergarten")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Master's degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == "No schooling completed")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Nursery school, preschool")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Professional degree beyond a bachelor's degree")
+conf_int
+conf_int <- t.test (person_data$SCHL == " Regular high school diploma")
+conf_int
+conf_int <- t.test (person_data$SCHL == "Some college, but less than 1 year")
+conf_int
+```
+
 
 ### My third categorical variable is Citizenship status , CIT
 ```{r}
 unique(person_data$CIT_label)
+```
+
+```{r quick summary statistics}
+CIT_summary <- summary(person_data$CIT)
+CIT_summary
 ```
 
 ```{r}
@@ -241,8 +291,13 @@ table(person_data$CIT_label) / sum(table(person_data$CIT_label))
 
 ```{r}
 conf_int <- t.test (person_data$CIT == "Born abroad of American parent(s)")
+conf_int
 conf_int <- t.test (person_data$CIT == "Born in Puerto Rico, Guam, the U.S. Virgin Islands, or the Northern Marianas ")
+conf_int
 conf_int <- t.test (person_data$CIT == "Born in the U.S.")
+conf_int
 conf_int <- t.test (person_data$CIT == "Not a citizen of the U.S. ")
+conf_int
 conf_int <- t.test (person_data$CIT == "U.S. citizen by naturalization ")
+conf_int
 ```
