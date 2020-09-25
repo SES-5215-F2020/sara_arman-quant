@@ -1,0 +1,290 @@
+---
+### title: "Assignment 3"
+### author: Sara Arman
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries, message=FALSE}
+library(tidycensus)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(viridis)
+```
+
+### I am loading my data set from assignment 1:
+This data set includes the following variables:
+1. Sex, "SEX", categorical 
+2. Wages or salary income past 12 months, "WAGP", continuous
+3. Public assistance income past 12 months, "PAP", continuous
+4. Educational attainment, "SCHL", categorical 
+5. Citizenship status, CIT, categorical 
+6. Age, AGEP, continuous
+
+I am interested in evaluating the relationships that exist between Sex, Immigration Status, and Educational Achievement. I am filtering my data to only include Wages and Public Assistance Income greater than -1 (thank you Sara for showing me how to do this!)
+
+```{r load and attach data, message=FALSE}
+person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
+  filter(WAGP> -1 & PAP> -1)
+```
+
+###For all possible pairs of variables in your dataset, test the relationship between the two variables. Indicate the significance and (if appropriate) the magnitude of each relationship.
+
+The first variable I will test is Wages Over Past 12 Months (WAGP)
+I will test the relationship between WAGP and my other continous variables (PAP,AGEP)
+
+For both of these, the p value is less than .05, so these have a statistically significant relationship, though we can see that is a weak negative correlation at 95% confidence interval. 
+
+What I interperet this to mean, is that people who have received wages over the past 12 months are slightly less likely to receive public assistance income, and that older people make slightly less money than younger people do. 
+
+``` {r}
+correlation <- cor.test(person_data$WAGP, person_data$PAP)
+correlation
+
+```
+
+### Scatter Plot of Wage and Public Assistance Income
+
+
+``` {r}
+options(scipen = 999)
+ggplot(person_data, aes(x = WAGP, y = PAP)) +
+  geom_point(size = 1.5, alpha = 0.10, position = "jitter") +
+  geom_smooth() +
+  theme_base() +
+  scale_x_continuous(name = "Wages over past 12 months") +
+  scale_y_continuous(name = "Public Assistance Income", 
+                     breaks = seq(0, 40000, by = 10000),
+                     labels = paste( 
+                                    prettyNum(seq(0, 40000, by = 10000),
+                                              big.mark = ","))) +
+  annotate(geom = "text", x = 0, y = 100, 
+           label = paste("Correlation (95-percent confidence):",
+                         prettyNum(correlation$conf.int[1], digits = 2), 
+                         "to",
+                         prettyNum(correlation$conf.int[2], digits = 2)),
+           hjust = 0)
+  
+```
+
+
+
+
+``` {r}
+correlation <- cor.test(person_data$WAGP, person_data$AGEP)
+correlation
+```
+
+
+### Scatter Plot of Wage and Age
+
+``` {r}
+options(scipen = 999)
+ggplot(person_data, aes(x = WAGP, y = AGEP)) +
+  geom_point(size = .8, alpha = 0.10, position = "jitter") +
+  geom_smooth() +
+  theme_base() +
+  scale_x_continuous(name = "Wages over past 12 months") +
+  scale_y_continuous(name = "Age", 
+                     breaks = seq(0, 100, by = 10),
+                     labels = paste( 
+                                    prettyNum(seq(0, 100, by = 10),
+                                              big.mark = ","))) +
+  annotate(geom = "text", x = 0, y = 100, 
+           label = paste("Correlation (95-percent confidence):",
+                         prettyNum(correlation$conf.int[1], digits = 2), 
+                         "to",
+                         prettyNum(correlation$conf.int[2], digits = 2)),
+           hjust = 0)
+  
+```
+
+
+### I will now test the relationship between WAGP and my categorical variables (Sex, Educational Attainment, and Citizenship Status)
+
+
+The first test i will run will be a t-test for Wages (Continous variable) and Sex (Binary categorical Variable)A question to ask with these variables would be "do men make more or less than women in Massachusetts" 
+
+Sex and Wages are strongly and positively correlated  at a 95% CI. 
+I interpret this to mean that people who identified as Male, on average, make more than people who have identified as Female. I am creating a violin plot to show the results.
+
+``` {r}
+difference = t.test(WAGP ~ SEX_label == "Female",
+                    data = person_data)
+difference
+```
+``` {r}
+ggplot(person_data, aes(x = SEX_label, y = WAGP)) +
+  geom_violin() +
+  theme_bw() +
+  scale_x_discrete(name = "Sex Assigned: Male or Female",
+                   labels = c("Male", "Female")) +
+   scale_y_continuous(name = "Wages Over Past 12 Months", 
+                     breaks = seq(0, 50000, by = 2000),
+                     labels = paste("$", 
+                                    prettyNum(seq(0, 50000, by = 2000),
+                                              big.mark = ","))) +
+  annotate(geom = "text", x = 3, y = 50000, size = 3,
+           label = paste("Difference in means\n(95% confidence):\n$",
+                         prettyNum(abs(difference$conf.int[2]), 
+                                   digits = 0), " to $",
+                         prettyNum(abs(difference$conf.int[1]), 
+                                   digits = 0),
+                         sep = "")) +
+  annotate(geom = "text", x = 1, y = difference$estimate[1], size = 3,
+           label = paste("Mean (95% confidence):\n$",
+                         prettyNum(difference$estimate[1], digits = 0))) +
+  annotate(geom = "text", x = 2, y = difference$estimate[2], size = 3,
+           label = paste("Mean (95% confidence):\n$",
+                         prettyNum(difference$estimate[2], digits = 0)))
+```
+
+For WAGP and my categorical variables with more than 2 options, I will run the anova test. I see that there is p value less than .05, so these Wages are is positively correlated with Citizenship Status and Educational Attainment. I will depict my results with a box plot.
+
+``` {r}
+anova <- aov(WAGP ~ SCHL_label, data = person_data)
+summary(anova)
+
+anova <- aov(WAGP ~ CIT_label, data = person_data)
+summary(anova)
+```
+
+``` {r}
+ggplot(person_data, aes(x = SCHL_label, y = WAGP)) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_x_discrete(name = "Educational Attainment") +
+  scale_y_continuous(name = "Wages over past 12 months", 
+                     breaks = seq(0, 700000, by = 50000),
+                     labels = paste("$", 
+                                    prettyNum(seq(0, 700000, by = 50000),
+                                              big.mark = ","))) 
+coord_flip()
+```
+
+``` {r}
+ggplot(person_data, aes(x = CIT_label, y = WAGP)) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 170)) +
+  scale_x_discrete(name = "Citizenship Status") +
+  scale_y_continuous(name = "Wages over past 12 months", 
+                     breaks = seq(0, 800000, by = 50000),
+                     labels = paste("$", 
+                                    prettyNum(seq(0, 800000, by = 50000),
+                                              big.mark = ","))) 
+```
+
+
+
+## The Second Variable I will test is Sex
+
+Sex and Continous Variables: 
+
+First I will test Sex and Public Assistant Income. Since this is a binary categorical variable and a continuous variable I will use a t-test. There is a significant relationship between sex and public assistance income, that is strong and negative at a 95% CI. I will use a t test to also test Sex and Age.There is a significant and weak negative relationship between sex and age.
+
+``` {r}
+difference = t.test(PAP ~ SEX_label == "Female",
+                    data = person_data)
+difference
+
+difference = t.test(AGEP~ SEX_label == "Female",
+                    data = person_data)
+difference
+```
+
+
+Sex and Categorical Variables: 
+
+I will now test sex and educational attainment. Since educational attainment is a categorical variable I will use a chi-square test. I can see that both of my p values are really small, so there is a significant relationship between sex and Education. there is also a significant relationship between sex and citizenship status which I was not expecting. I will depict these in a jitterplot which I got off the ggplot cheat code. There is not much I can interpret from the plot, perhaps that women are more likely to have an associate degree than men are. 
+``` {r}
+chi_sq <- chisq.test(person_data$SEX_label, person_data$SCHL_label) 
+chi_sq
+
+chi_sq <- chisq.test(person_data$SEX_label, person_data$CIT_label) 
+chi_sq
+```
+
+
+```{r}
+ggplot(person_data, aes(x = SEX_label, y = SCHL_label)) +
+geom_jitter(size = 1, alpha = 0.15, color = "skyblue")+
+  labs(title = 'Educational Attainment by Sex')+
+ theme_bw()
+coord_flip()
+```
+```{r}
+ggplot(person_data, aes(x = SEX_label, y = CIT_label)) +
+geom_jitter(size = 0.95, alpha = 0.15, color = "skyblue")+
+  labs(title = 'Citizenship Status by Sex')+
+ theme_bw()
+coord_flip()
+```
+
+### My third variable is Public Assistance Income
+
+I will first test Public Assistance Income with Age a continous variable.
+I see there is a significant relationship, and they are weakly correlated. 
+
+```{r}
+correlation <- cor.test(person_data$PAP, person_data$AGEP)
+correlation
+```
+
+
+I will test Public Assistance Income with my categorical variables, Educational Attainment and Citizenship Status. 
+
+These are significant relationships that are weakly and positively correlated.
+
+``` {r}
+anova <- aov(PAP ~ SCHL_label, data = person_data)
+summary(anova)
+
+anova <- aov(PAP ~ CIT_label, data = person_data)
+summary(anova)
+```
+
+
+
+
+### My fourth variable is Educational Attainment (SCHL)
+
+I will test educational attainment and age, a continous variable. To do this I will use the anova test. This relationship is signficiant.
+
+```{r}
+anova <- aov(AGEP ~ SCHL_label, data = person_data)
+summary(anova)
+```
+
+I will then test educational attainment and citizenship status, 2 categorical variables, so I will use a chi square test. My p value is less than .05, so I know this is a significant relationship.
+
+``` {r}
+chi_sq <- chisq.test(person_data$CIT_label, person_data$SCHL_label)
+chi_sq
+```
+
+``` {r chi square observed}
+chi_sq$observed
+```
+``` {r}
+chi_sq$expected
+```
+
+
+
+### My last variable is citizenship status
+
+I will test it with the last remaining combination, citizenship status and age. To do this I will use the anova test. My p value is much smaller than .05, so this is a significant relationship.
+
+```{r}
+anova <- aov(AGEP ~ CIT_label, data = person_data)
+summary(anova)
+```
+
+
+
