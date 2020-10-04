@@ -1,0 +1,79 @@
+---
+title: "Assignment 4"
+author: "Sara Arman"
+date: "9/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries, message=FALSE}
+library(tidycensus)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(viridis)
+```
+
+### I am loading my data, and filtering it out to only include Wages and Public Assistance Income that is greater than -1. 
+
+```{r load and attach data, message=FALSE}
+person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
+  filter(WAGP> -1 & PAP> -1)
+```
+
+### I am now mutating the Educational Attainment Data to bucket it into smaller groups.
+
+I will divide it up into No schooling completed, High school graduate, Associate's Degree, Bachelor's Degree, and Graduate Degree. This will help me understand my final regression better since it won't include as many variables. I will also put a "1" before the observations that I want to compare in my regression (HS Graduate)
+
+I did think this was a good example of "making a choice" during data cleaning/analysis because I made the choice to define someone who had completed 12th grade and had not received their diploma or someone who completed some college as "High School Graduate" though these are different things, I don't know if my choices are necessarily "right" or "wrong" rather I was just conscious that this was a choice I was making. 
+
+
+
+```{r load data, message=FALSE}
+person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
+
+mutate(SCHL = case_when(
+    SCHL_label=="1 or more years of college credit, no degree"~"1 HS Graduate",
+    SCHL_label=="12th grade - no diploma"~"1 HS Graduate",
+    SCHL_label=="Associate's degree"~"Associate's degree",
+    SCHL_label=="Bachelor's degree"~"Bachelor's degree",
+    SCHL_label=="Doctorate degree"~"Graduate School or Higher",
+    SCHL_label=="GED or alternative credential"~"1 HS Graduate",
+    SCHL_label=="Grade 10"~"Some Highschool",
+    SCHL_label=="Grade 11"~"Some Highschool",
+    SCHL_label=="Grade 1"~"Grade School",
+    SCHL_label=="Grade 2"~"Grade School",
+    SCHL_label=="Grade 3"~"Grade School",
+    SCHL_label=="Grade 4"~"Grade School",
+    SCHL_label=="Grade 5"~"Grade School",
+    SCHL_label=="Grade 6"~"Grade School",
+    SCHL_label=="Grade 7"~"Grade School",
+    SCHL_label=="Grade 8"~"Grade School",
+    SCHL_label=="Grade 9"~"Some Highschool",
+    SCHL_label=="Kindergarten"~"Grade School",
+    SCHL_label=="Master's degree"~"Graduate School or Higher",
+    SCHL_label=="No schooling completed"~"No Schooling Completed",
+    SCHL_label=="Nursery school, preschool"~"No Schooling Completed",
+    SCHL_label=="Professional degree beyond a bachelor's degree"~"Graduate School or Higher",
+    SCHL_label=="Regular high school diploma"~"1 HS Graduate",
+    SCHL_label=="Some college, but less than 1 year"~"1 HS Graduate"))
+```
+
+
+### Running the Regression Model 
+```{r model}
+model <- lm(WAGP ~ SEX + CIT + PAP + SCHL +AGEP, 
+            data = person_data)
+summary(model)
+```
+### Interpretation
+
+In this regression model, the multiple R squared value is 0.1856, which means that if we control for Sex, Citizenship Status, Age, and Public Assistance Income, Educational Attainment can account for 18% of the variation in Wages earned per year. People who have Bachelor's degrees make on average 20000 more dollars per year than highschool graduates, and people who have completed graduate school make 40000 more. 
+
+What was really interesting to see was the results based on Sex, the p value was 2e^-16, so we know the relationship between Wages earned and Sex is signficiant. This model shows us that if we hold all these other variables constant, males on average make 18000 more than females. 
+
+
+
