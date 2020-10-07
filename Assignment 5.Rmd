@@ -1,0 +1,138 @@
+---
+title: "Assignment 5"
+author: "Sara Arman"
+date: "10/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries}
+library(tidyverse)
+library(jtools)
+library(interactions)
+library(knitr)
+library(ggplot2)
+```
+
+### Assignment 5: Interactions and transformations
+Estimate at least one more version of the regression you estimated in Assignment 4 by transforming one or more of the independent variables and including at least one interaction term. Which version of the model best explains the observed variation in your dependent variable?
+
+
+### Loading the data
+
+I'll start by loading and recoding the person-level dataset I created in Week 1. I have edited this dataset to include Wages and Public Assistance Income greater than 0, and to omit all of my "na" observations, since they cause an error when I use the log function. Additionally I have mutated my educational attainment data to bin it into smaller groups which makes my regression easier to read.
+
+This data set includes the following variables:
+1. Sex, "SEX", categorical 
+2. Wages or salary income past 12 months, "WAGP", continuous
+3. Public assistance income past 12 months, "PAP", continuous
+4. Educational attainment, "SCHL", categorical 
+5. Citizenship status, CIT, categorical 
+6. Age, AGEP, continuous
+
+```{r load data, message=FALSE}
+person_data <-read_csv('SaraArman-DataSet1_Final.csv') %>%
+mutate(SCHL = case_when(
+
+    SCHL_label=="1 or more years of college credit, no degree"~"1 HS Graduate",
+
+    SCHL_label=="12th grade - no diploma"~"1 HS Graduate",
+
+    SCHL_label=="Associate's degree"~"Associate's degree",
+
+    SCHL_label=="Bachelor's degree"~"Bachelor's degree",
+
+    SCHL_label=="Doctorate degree"~"Graduate School or Higher",
+
+    SCHL_label=="GED or alternative credential"~"1 HS Graduate",
+
+    SCHL_label=="Grade 10"~"Some Highschool",
+
+    SCHL_label=="Grade 11"~"Some Highschool",
+
+    SCHL_label=="Grade 1"~"Grade School",
+
+    SCHL_label=="Grade 2"~"Grade School",
+
+    SCHL_label=="Grade 3"~"Grade School",
+
+    SCHL_label=="Grade 4"~"Grade School",
+
+    SCHL_label=="Grade 5"~"Grade School",
+
+    SCHL_label=="Grade 6"~"Grade School",
+
+    SCHL_label=="Grade 7"~"Grade School",
+
+    SCHL_label=="Grade 8"~"Grade School",
+
+    SCHL_label=="Grade 9"~"Some Highschool",
+
+    SCHL_label=="Kindergarten"~"Grade School",
+
+    SCHL_label=="Master's degree"~"Graduate School or Higher",
+
+    SCHL_label=="No schooling completed"~"No Schooling Completed",
+
+    SCHL_label=="Nursery school, preschool"~"No Schooling Completed",
+
+    SCHL_label=="Professional degree beyond a bachelor's degree"~"Graduate School or Higher",
+
+    SCHL_label=="Regular high school diploma"~"1 HS Graduate",
+
+    SCHL_label=="Some college, but less than 1 year"~"1 HS Graduate")) %>%
+
+     filter( WAGP> 0 & PAP> 0 )
+
+na.omit(person_data)
+```
+
+
+## Initial regression model
+
+Linear regression model predicting Wages earned by educational attainment, citizenship status, age, and sex (same from Assignment 4)
+
+My dependant variable is Wages earned, my independant variables are Sex, citizenship status, public assistance income, educational attainment, and age. My R squared is .2218, which means that if we control for Sex, Citizenship Status, Age, and Public Assistance Income, Educational Attainment can account for 22% of the variation in Wages earned per year.
+
+```{r}
+model1 <- lm(WAGP ~ SEX + PAP + CIT + SCHL +AGEP, 
+            data = person_data)
+summary(model1)
+```
+
+### Log Transformation
+
+Here I will do a log transformation because it might be that percent changes of public assistance income might make a larger difference than the dollar amount. My group in Quant this morning (Catherine, Cristina, Mel) were all really helpful in trouble shooting why my Log wasn't working and now it is! I had to remove all NA and 0 observations. My R Squared decreased from 0.2218 to 0.1943, which means this model does not fit as well as the initial  regression model. 
+
+```{r}
+model2 <- lm(WAGP ~ SEX + log(PAP) + CIT + SCHL +AGEP, 
+            data = person_data)
+summary(model2)
+```
+
+
+### Adding an Interaction Term 
+
+Now I will add an interaction term, looking at if receiving Public Assistance Income makes a difference in educational attainment. My R squared turns out to be .227, so this model fits slightly better, and can account for 22% of the variations in Wages. My p value is small (1.022^-11) so this however is a significant relationship.
+```{r}
+model3 <- lm(WAGP ~ SEX + log(PAP) + CIT + SCHL:log(PAP) +AGEP, 
+            data = person_data)
+summary(model3)
+```
+
+
+### Removing variables
+
+I have decided to remove some variables to focus more specifically on the relationship between Wages, Sex, and Educational Attainment. The question I am asking is "what is the difference between wages earned amongst equally educated women and men?" Once I ran this regression my R squared decreased to .14 which means this model does not fit as well, and only accounts for 14% of the variation in wages, and my p-value is really small (8.3^-.06) so this is still a signficant relationship though not a strong one. 
+```{r}
+model4 <- lm(WAGP ~ SEX_label + SCHL:SEX_label, 
+            data = person_data)
+summary(model4)
+```
+
+### Conclusion 
+
+My best fitting model was looking at the effects of 2 of my independant variables on one another, looking at the interaction between the percent change of recieving Public Assistance Income and Educational Attainment provided the best-fitting model. 
